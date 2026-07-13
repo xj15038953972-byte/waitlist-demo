@@ -1,5 +1,4 @@
 import { AuthNav } from "@/components/AuthNav";
-import { RecentWaitlist } from "@/components/RecentWaitlist";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { getCurrentUser } from "@/lib/auth";
 import { getUserWaitlistEntry } from "@/lib/waitlist";
@@ -37,9 +36,9 @@ export default async function Home() {
           <WaitlistForm
             isLoggedIn={Boolean(user)}
             waitlistEmail={userEntry?.email ?? null}
+            waitlistEntryId={userEntry?.id ?? null}
             hasJoined={Boolean(userEntry)}
           />
-          {user ? <RecentWaitlist currentUserId={user.id} /> : null}
         </div>
 
         <p className="mt-8 text-sm text-zinc-500">

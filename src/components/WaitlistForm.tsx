@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 type WaitlistFormProps = {
   isLoggedIn: boolean;
   waitlistEmail?: string | null;
+  waitlistEntryId?: string | null;
   hasJoined?: boolean;
 };
 
@@ -15,6 +16,7 @@ type FormStatus = "idle" | "loading" | "success" | "error";
 export function WaitlistForm({
   isLoggedIn,
   waitlistEmail = null,
+  waitlistEntryId = null,
   hasJoined = false,
 }: WaitlistFormProps) {
   const router = useRouter();
@@ -52,6 +54,38 @@ export function WaitlistForm({
     }
   }
 
+  async function handleLeave() {
+    if (!waitlistEntryId) {
+      setStatus("error");
+      setMessage("Waitlist entry not found.");
+      return;
+    }
+
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const response = await fetch(`/api/waitlist/${waitlistEntryId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(data.error ?? "Failed to leave the waitlist.");
+        return;
+      }
+
+      setStatus("success");
+      setMessage("You have left the waitlist.");
+      router.refresh();
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please check your connection and try again.");
+    }
+  }
+
   if (!isLoggedIn) {
     return (
       <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-5 text-sm text-zinc-300">
@@ -76,9 +110,32 @@ export function WaitlistForm({
 
   if (hasJoined) {
     return (
-      <div className="w-full max-w-md rounded-xl border border-emerald-900/50 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-300">
-        Your account is on the waitlist as{" "}
-        <span className="font-medium text-emerald-200">{waitlistEmail}</span>.
+      <div className="w-full max-w-md">
+        <div className="rounded-xl border border-emerald-900/50 bg-emerald-950/30 px-4 py-4 text-sm text-emerald-300">
+          <p>
+            Your account is on the waitlist as{" "}
+            <span className="font-medium text-emerald-200">{waitlistEmail}</span>.
+          </p>
+          <button
+            type="button"
+            onClick={handleLeave}
+            disabled={status === "loading"}
+            className="mt-4 h-11 w-full rounded-xl border border-emerald-800/60 bg-transparent text-sm font-medium text-emerald-200 transition hover:bg-emerald-900/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {status === "loading" ? "Leaving..." : "Leave waitlist"}
+          </button>
+        </div>
+
+        {message ? (
+          <p
+            role="status"
+            className={`mt-4 text-sm ${
+              status === "success" ? "text-emerald-400" : "text-red-400"
+            }`}
+          >
+            {message}
+          </p>
+        ) : null}
       </div>
     );
   }

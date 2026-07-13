@@ -22,11 +22,15 @@ export async function POST(request: Request) {
       where: { username },
     });
 
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Invalid username or password." },
-        { status: 401 },
+        { error: "This username does not exist. Please register first." },
+        { status: 404 },
       );
+    }
+
+    if (!(await verifyPassword(password, user.passwordHash))) {
+      return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
     }
 
     await createSession(user.id);
